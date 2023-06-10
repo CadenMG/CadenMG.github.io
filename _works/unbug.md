@@ -1,10 +1,10 @@
 ---
 title: "unbug"
 subtitle: "A Linux x86 debugger optimized for simplicity"
-thumbnail: "/images/redis-logo.png"
+thumbnail: "/images/x86.png"
 ---
 
-![dummy image](/images/x86.png)
+![dummy image](/images/debug.png)
 
 _**Rusty Redis (2023)**_
 

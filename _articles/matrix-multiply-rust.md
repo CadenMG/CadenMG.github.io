@@ -114,14 +114,14 @@ cargo r --release
 ...
 Finished release [optimized] target(s) in 0.01s
      Running `target/release/matrix`
-Time taken: 170ns
+Time taken: 328.815344ms
 ```
-That is *ridiculous* 🤯! It's hard to understate how amazing that is. We went from a Python prototype running on the order of minutes, to a binary running on the order of nanoseconds - mostly by just passing a single flag to the Rust compiler. This should always be the first trick to reach for. I feel confident that 170ns matrix multiplication should be sufficient for *most* use cases, so I'll stop the speed chasing here.
+That is *ridiculous* 🤯! It's hard to understate how amazing that is. We went from a Python prototype running on the order of minutes, to a binary running on the order of nanoseconds - mostly by just passing a single flag to the Rust compiler. This should always be the first trick to reach for. I feel confident that 328ms matrix multiplication should be sufficient for *most* use cases, so I'll stop the speed chasing here.
 
 ### What's next?
 In the next post, we'll increase our matrix size from 1024 to 4096. This will require coming up with new techniques to further push the limits of our machines. 
 
-As a take-home exercise, I'd like you to consider what's the fastest you could theoretically multiply two 1024x1024 matrices on your machine. Obviously 170ns is pretty good, but could we do even better? And if so, by how much exactly? What's the speed limit of our machines?
+As a take-home exercise, I'd like you to consider what's the fastest you could theoretically multiply two 1024x1024 matrices on your machine. Obviously 328ms is pretty good, but could we do even better? And if so, by how much exactly? What's the speed limit of our machines?
 
 We'll explore this further in the next post.
 

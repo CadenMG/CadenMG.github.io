@@ -2,7 +2,7 @@
 id: 2
 title: "Optimizing Matrix Multiply with Rust"
 subtitle: "An instructive intro to performance optimization with Rust"
-date: "2023.17.11"
+date: "2023.06.17"
 tags: "rust, performance"
 ---
 
@@ -194,7 +194,7 @@ Running time = 4.75s
 => Flops = 2^37 / 4.75 = 29 GFLOPS
 => Utilization = Flops / Max flops = 29 / 845 = 3.4%
 ```
-We've only achieved 3.4% of the maximum... That really makes you appreciate the engineering work behind hyper-optimized libraries such as `numpy`:
+We've only achieved 3.4% of the maximum😕. That really makes you appreciate the engineering work behind hyper-optimized libraries such as `numpy`:
 ```python
 import random
 import numpy as np
@@ -222,6 +222,6 @@ Well, we clearly have a lot to improve on. To name just a few directions we coul
 - maximizing [automatic vectorization](https://en.wikipedia.org/wiki/Automatic_vectorization)
 - [AVX intrinsics](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions)
 
-Each of these could be their own blog posts, so for the sake of brevity lets call it a day here.
+Each of these adventures could be their own blog posts, so for the sake of brevity lets call it a day here, and feel happy about the speedups we were able to achieve.
 
 [Full code on GitHub](https://github.com/CadenMG/matrix-optimizations)

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Anki Chrome - Privacy Policy</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
+  <link rel="preload" href="./styles/anki-chrome.css" as="style">
+  <link rel="stylesheet" href="./styles/anki-chrome.css">
+</head>
+<body>
+  <header id="top-container" role="navigation">
+    <%- include(process.cwd() + '/app/templates/navigation'); %>
+  </header>
+  <main id="main-container">
+    <section id="privacy-container">
+      <h2>Privacy Policy - Anki Chrome</h2>
+      <p><em>Last updated: <%= new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></em></p>
+
+      <section>
+        <h3>About Anki Chrome</h3>
+        <p>Anki Chrome is a browser extension that allows users to create flashcards directly from their browser.</p>
+      </section>
+
+      <section>
+        <h3>Data Collection</h3>
+        <p><strong>Anki Chrome does not collect, store, or transmit any user data.</strong></p>
+        <p>The extension operates entirely locally on your device. All flashcards and content you create remain on your device and are not sent to any external servers.</p>
+      </section>
+
+      <section>
+        <h3>Third-Party Services</h3>
+        <p>This extension does not use any third-party analytics, tracking, or data collection services.</p>
+      </section>
+
+      <section>
+        <h3>Changes to This Policy</h3>
+        <p>Any updates to this privacy policy will be reflected on this page.</p>
+      </section>
+
+      <section>
+        <h3>Contact</h3>
+        <p>If you have any questions about this privacy policy, please contact <a href="mailto:caden.anki@gmail.com">caden.anki@gmail.com</a>.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

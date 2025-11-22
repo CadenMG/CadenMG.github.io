@@ -40,6 +40,15 @@ class PagePublisher {
     const DIST_PATH: string = path.join(__dirname, '../app/public/works.html');
     fs.writeFileSync(DIST_PATH, ejs.render(String(TEMPLATE), { works }));
   }
+
+  /**
+   * Builds `anki-chrome` privacy policy page template file.
+   */
+  public static publishAnkiChrome() {
+    const TEMPLATE: Buffer = fs.readFileSync(path.join(__dirname, '../app/templates/anki-chrome.ejs'));
+    const DIST_PATH: string = path.join(__dirname, '../app/public/anki-chrome.html');
+    fs.writeFileSync(DIST_PATH, ejs.render(String(TEMPLATE)));
+  }
 }
 
 export default PagePublisher;

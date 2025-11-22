@@ -46,6 +46,9 @@ switch (target) {
 
     console.log('Publish all pages: PagePublisher.publishAbout()');
     PagePublisher.publishAbout();
+
+    console.log('Publish all pages: PagePublisher.publishAnkiChrome()');
+    PagePublisher.publishAnkiChrome();
     break;
 
   default:

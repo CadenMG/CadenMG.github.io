@@ -1,0 +1,41 @@
+@import 'init.css';
+
+#privacy-container {
+  max-width: 800px;
+}
+
+#privacy-container h2 {
+  margin-bottom: 10px;
+}
+
+#privacy-container p,
+#privacy-container ul {
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+#privacy-container section {
+  margin-bottom: 30px;
+}
+
+#privacy-container h3 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+#privacy-container a {
+  text-decoration: underline;
+}
+
+#privacy-container a:hover,
+#privacy-container a:focus {
+  text-decoration: none;
+  background-color: black;
+  color: white;
+}
+
+#privacy-container em {
+  color: #666;
+  font-size: 14px;
+}

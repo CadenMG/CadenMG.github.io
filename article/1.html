@@ -1,0 +1,132 @@
+<!doctypehtml>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calling Python from Rust</title>
+
+  <meta name="viewport"content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-UA-Compatible"content="ie=edge">
+
+  <link rel="shortcut icon"href="../assets/favicon.ico"type="image/x-icon">
+  <link rel="preload"href="../styles/article.css"as="style">
+  <link rel="stylesheet"href="../styles/article.css">
+</head>
+<body>
+  <header id="top-container"role="navigation">
+    <nav>
+  <a class="logo-link"href="/">
+    <h1>Caden Garrett</h1>
+    <span>Building @vast.codes 🦀</span>
+  </a>
+  <small>
+    <a id="about"class="info-link"href="/about.html">👀About</a> /
+    <a id="works"class="info-link"href="/works.html">🔥Projects</a> /
+    <a id="articles"class="info-link"href="/articles.html">📚Blog Posts</a>
+  </small>
+</nav>
+
+  </header>
+  <main id="main-container">
+    <article id="article-container">
+      <h1 id="article-title">
+        Calling Python from Rust
+      </h1>
+      
+        <h2 id="article-subtitle">
+          A quick and dirty way to call your Python modules from Rust
+        </h2>
+      
+      <time id="article-date">
+        2023.06.03
+      </time>
+      <section id="article-content-container">
+        <details><summary>Table of Contents</summary>
+<p><div class="table-of-contents"><ul><li><a href="#python-code">Python Code</a><li><a href="#python-setup">Python Setup</a><li><a href="#rust-setup">Rust Setup</a><li><a href="#call-python-code-from-rust">Call Python code from Rust</a></ul></div><p></p>
+</details>
+<h1 id="python-code"tabindex="-1">Python Code</h1>
+<p>Assume we have the following Python code that we would like to call from Rust:</p>
+<pre class="hljs"><code><span class="hljs-keyword">def</span> <span class="hljs-title function_">join</span>(<span class="hljs-params">s1, s2</span>):
+    <span class="hljs-comment"># Joins the strings s1 and s2</span>
+    <span class="hljs-keyword">return</span> s1 + <span class="hljs-string">&#x27; &#x27;</span> + s2
+</code></pre>
+<h1 id="python-setup"tabindex="-1">Python Setup</h1>
+<p>We need to ensure the module is visible to the Python interpreter. One way this can be done is by modifying the <code>PYTHONPATH</code> <a href="https://bic-berkeley.github.io/psych-214-fall-2016/using_pythonpath.html">environment variable</a> to include the path to the module:</p>
+<pre class="hljs"><code><span class="hljs-built_in">export</span> PYTHONPATH=<span class="hljs-string">&quot;<span class="hljs-variable">${PYTHONPATH}</span>:/path/to/your/module/&quot;</span>
+</code></pre>
+<h1 id="rust-setup"tabindex="-1">Rust Setup</h1>
+<p>We can utilize the <a href="https://docs.rs/pyo3/latest/pyo3/">pyo3 crate</a> to take care of the Rust bindings to the Python interpreter:</p>
+<pre class="hljs"><code>[dependencies]
+pyo3 = <span class="hljs-string">&quot;0.11&quot;</span>
+</code></pre>
+<h1 id="call-python-code-from-rust"tabindex="-1">Call Python code from Rust</h1>
+<p>Now we can use <code>pyo3</code> to import and call our Python module from Rust:</p>
+<pre class="hljs"><code><span class="hljs-keyword">use</span> pyo3::{prelude::*, types::{PyTuple, PyString}};
+
+<span class="hljs-keyword">fn</span> <span class="hljs-title function_">call_python_function</span>() <span class="hljs-punctuation">-&gt;</span> PyResult&lt;<span class="hljs-type">String</span>&gt; {
+    <span class="hljs-comment">// Acquire the Python Globabl Interpreter Lock</span>
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">gil</span> = Python::<span class="hljs-title function_ invoke__">acquire_gil</span>();
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">py</span> = gil.<span class="hljs-title function_ invoke__">python</span>();
+
+    <span class="hljs-comment">// Import my Python module</span>
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">module</span> = py.<span class="hljs-title function_ invoke__">import</span>(<span class="hljs-string">&quot;my_module&quot;</span>)?;
+
+    <span class="hljs-comment">// Create an array of Python Strings</span>
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">args</span> = [
+        PyString::<span class="hljs-title function_ invoke__">new</span>(py, <span class="hljs-string">&quot;Hello&quot;</span>),
+        PyString::<span class="hljs-title function_ invoke__">new</span>(py, <span class="hljs-string">&quot;World&quot;</span>),
+    ];
+
+    <span class="hljs-comment">// Call the Python function &quot;join&quot; with some arguments</span>
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">result</span> = module.<span class="hljs-title function_ invoke__">call1</span>(
+        <span class="hljs-string">&quot;join&quot;</span>, 
+        PyTuple::<span class="hljs-title function_ invoke__">new</span>(py, args),
+    )?;
+
+    <span class="hljs-keyword">let</span> <span class="hljs-variable">result</span>: <span class="hljs-type">String</span> = result.<span class="hljs-title function_ invoke__">extract</span>()?;
+
+    <span class="hljs-title function_ invoke__">Ok</span>(result)
+}
+
+<span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() {
+    <span class="hljs-keyword">match</span> <span class="hljs-title function_ invoke__">call_python_function</span>() {
+        <span class="hljs-title function_ invoke__">Ok</span>(result) =&gt; <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Python function returned: {}&quot;</span>, result),
+        <span class="hljs-title function_ invoke__">Err</span>(err) =&gt; eprintln!(<span class="hljs-string">&quot;Error calling Python function: {:?}&quot;</span>, err.ptraceback),
+    }
+}
+</code></pre>
+<p>Upon running we see the output: <code>Python function returned: Hello World</code></p>
+
+      </section>
+      <section id="article-navigation">
+        
+          <div class="article-navigation-item article-navigation-next">
+            <a href="/article/3.html">
+              <div class="article-navigation-arrow article-navigation-next">＜</div>
+              <div class="article-navigation-content article-navigation-next">
+                <p class="article-navigation-title">Creating Python Extensions with Rust</p>
+                <p class="article-navigation-subtitle">Utilizing PyO3 and maturin to create Python Extensions</p>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="article-navigation-item article-navigation-prev">
+            <a href="/article/5.html">
+              <div class="article-navigation-arrow article-navigation-prev">＞</div>
+              <div class="article-navigation-content article-navigation-prev">
+                <p class="article-navigation-title">Patching Node Dependencies</p>
+                <p class="article-navigation-subtitle"></p>
+              </div>
+            </a>
+          </div>
+        
+      </section>
+      <section id="article-list-button-container">
+        <a href="/articles.html">
+          <div id="article-list-button">📚</div>
+        </a>
+      </section>
+    </article>
+  </main>
+
+

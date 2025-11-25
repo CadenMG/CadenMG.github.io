@@ -1,0 +1,99 @@
+<!doctypehtml>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Building PaperPods</title>
+
+  <meta name="viewport"content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-UA-Compatible"content="ie=edge">
+
+  <link rel="shortcut icon"href="../assets/favicon.ico"type="image/x-icon">
+  <link rel="preload"href="../styles/article.css"as="style">
+  <link rel="stylesheet"href="../styles/article.css">
+</head>
+<body>
+  <header id="top-container"role="navigation">
+    <nav>
+  <a class="logo-link"href="/">
+    <h1>Caden Garrett</h1>
+    <span>Building @vast.codes 🦀</span>
+  </a>
+  <small>
+    <a id="about"class="info-link"href="/about.html">👀About</a> /
+    <a id="works"class="info-link"href="/works.html">🔥Projects</a> /
+    <a id="articles"class="info-link"href="/articles.html">📚Blog Posts</a>
+  </small>
+</nav>
+
+  </header>
+  <main id="main-container">
+    <article id="article-container">
+      <h1 id="article-title">
+        Building PaperPods
+      </h1>
+      
+        <h2 id="article-subtitle">
+          A tour of modern web app development
+        </h2>
+      
+      <time id="article-date">
+        2024.04.13
+      </time>
+      <section id="article-content-container">
+        <details><summary>Table of Contents</summary>
+<p><div class="table-of-contents"><ul><li><a href="#paperpods">PaperPods</a><li><a href="#cloud-provider">Cloud Provider</a><li><a href="#authentication">Authentication</a><li><a href="#data-storage">Data Storage</a><li><a href="#serverless-functions">Serverless Functions</a><li><a href="#serverless-jobs">Serverless Jobs</a><li><a href="#continuous-deployment">Continuous Deployment</a><li><a href="#hosting">Hosting</a><li><a href="#domains">Domains</a><li><a href="#forms">Forms</a><li><a href="#email-marketing">Email Marketing</a><li><a href="#payments">Payments</a></ul></div><p></p>
+</details>
+<p><img src="/images/paperpods.svg"alt="paperpods"loading="lazy"decoding="async"width="500"height="500"></p>
+<h3 id="paperpods"tabindex="-1">PaperPods</h3>
+<p>PaperPods is as <em>standard</em> and unremarkable of a web-app as any. There’s a landing page, authentication, authorization, payments, data storage, data retrieval, and some backend.
+You go to the site, signup, pay for the service, use the service, and expect your data to persist. That’s about it.
+But while the end-result is honestly pretty trivial, you’re often faced with many different options for each piece of the website. I’ll highlight some of the decisions I made along the way, and perhaps you can use this as an n=1 example for why to use some framework.</p>
+<h3 id="cloud-provider"tabindex="-1">Cloud Provider</h3>
+<p>At the heart of most modern web development is some cloud infrastructure. I’ve become a fan of GCP in recent years - mostly because it’s the one I have the most experience with - but I really just appreciate how dead simple <a href="https://firebase.google.com/">Firebase</a> is to setup and get going ASAP.
+Obviously GCP isn’t the only solution. But I’m not here to give you all of the solutions, just the ones I’ve found to like 😊</p>
+<h3 id="authentication"tabindex="-1">Authentication</h3>
+<p>Firebase. Create an account, smash a few buttons, copy some template, and you’ve got a secure, working signup + login page.
+I’m sure there exists other solutions which are equally as simple, but I can’t see it getting any easier than this.</p>
+<h3 id="data-storage"tabindex="-1">Data Storage</h3>
+<p>Firebase offers a few different storage options. For key/value based storage, I’ve used Firestore Database and haven’t regretted it yet. I also use Firestore Storage for my blob/file based storage. I don’t think Firestore has any relation DB solutions currently, but GCP’s Cloud SQL should have you covered.</p>
+<h3 id="serverless-functions"tabindex="-1">Serverless Functions</h3>
+<p>Docker with GCP’s Cloud Run. Build it, upload to GCR, and deploy to Cloud Run. Simple. And there’s plenty of customization’s you can do around the machine specs and runtime conditions, if you need. I use it for running all of my Docker containers.</p>
+<h3 id="serverless-jobs"tabindex="-1">Serverless Jobs</h3>
+<p>I’m defining this as code which executes async. in response to some event. Firebase has Cloud Functions which allows you to do just that. I use it for sending out my weekly newsletters.</p>
+<h3 id="continuous-deployment"tabindex="-1">Continuous Deployment</h3>
+<p>Who doesn’t love GitHub workflows 😊? I jest, but it does do a good job of building Docker containers and deploying them to Cloud Run for me.</p>
+<h3 id="hosting"tabindex="-1">Hosting</h3>
+<p><a href="https://vercel.com/">Vercel</a>. I’ve heard mixed things on all of the major ones, and I’m not going to pretend to be an expert, but it seems decent so far. I like that you can trigger deployments on pushes to certain branches. And it handles environment variables in a clean way.</p>
+<h3 id="domains"tabindex="-1">Domains</h3>
+<p><a href="https://www.namecheap.com/">Namecheap</a>. Not much to say about this one. Go buy a domain for cheap.</p>
+<h3 id="forms"tabindex="-1">Forms</h3>
+<p>Forms are a nice way for user’s to contact you about issues or questions. <a href="https://formspree.io/">Formspree</a> was easy to integrate and gets the job done.</p>
+<h3 id="email-marketing"tabindex="-1">Email Marketing</h3>
+<p>I have mixed feelings on this one, but I’ve used <a href="https://mailchimp.com/">Mailchimp</a> and have had mixed success. It’s a powerful tool, and I’m sure it’s got its use-cases, but honestly if you’re just trying to do something simple (like I was…), then maybe look elsewhere.</p>
+<h3 id="payments"tabindex="-1">Payments</h3>
+<p><a href="https://stripe.com/">Stripe</a>. I guess it’s the gold standard at this point. I’d say it deserves it. Fairly easy to integrate, test in dev environments, and setup in production.</p>
+
+      </section>
+      <section id="article-navigation">
+        
+          <div class="article-navigation-item article-navigation-next">
+            <a href="/article/2.html">
+              <div class="article-navigation-arrow article-navigation-next">＜</div>
+              <div class="article-navigation-content article-navigation-next">
+                <p class="article-navigation-title">Optimizing Matrix Multiply with Rust</p>
+                <p class="article-navigation-subtitle">An instructive intro to performance optimization with Rust</p>
+              </div>
+            </a>
+          </div>
+        
+        
+      </section>
+      <section id="article-list-button-container">
+        <a href="/articles.html">
+          <div id="article-list-button">📚</div>
+        </a>
+      </section>
+    </article>
+  </main>
+
+

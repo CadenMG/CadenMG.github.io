@@ -1,0 +1,270 @@
+<!doctypehtml>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Optimizing Matrix Multiply with Rust</title>
+
+  <meta name="viewport"content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-UA-Compatible"content="ie=edge">
+
+  <link rel="shortcut icon"href="../assets/favicon.ico"type="image/x-icon">
+  <link rel="preload"href="../styles/article.css"as="style">
+  <link rel="stylesheet"href="../styles/article.css">
+</head>
+<body>
+  <header id="top-container"role="navigation">
+    <nav>
+  <a class="logo-link"href="/">
+    <h1>Caden Garrett</h1>
+    <span>Building @vast.codes 🦀</span>
+  </a>
+  <small>
+    <a id="about"class="info-link"href="/about.html">👀About</a> /
+    <a id="works"class="info-link"href="/works.html">🔥Projects</a> /
+    <a id="articles"class="info-link"href="/articles.html">📚Blog Posts</a>
+  </small>
+</nav>
+
+  </header>
+  <main id="main-container">
+    <article id="article-container">
+      <h1 id="article-title">
+        Optimizing Matrix Multiply with Rust
+      </h1>
+      
+        <h2 id="article-subtitle">
+          An instructive intro to performance optimization with Rust
+        </h2>
+      
+      <time id="article-date">
+        2023.06.17
+      </time>
+      <section id="article-content-container">
+        <details><summary>Table of Contents</summary>
+<p><div class="table-of-contents"><ul><li><a href="#problem">Problem</a><li><a href="#naive-python-implementation">Naive Python Implementation</a><li><a href="#naive-rust-implementation">Naive Rust Implementation</a><li><a href="#modifying-loop-order">Modifying Loop Order</a><li><a href="#compiler-optimization">Compiler Optimization</a><li><a href="#1024--%3E-4096">1024 -&gt; 4096</a><li><a href="#parallel-loops">Parallel Loops</a><li><a href="#what%E2%80%99s-the-speed-limit%3F">What’s the speed limit?</a><li><a href="#what%E2%80%99s-next%3F">What’s next?</a></ul></div><p></p>
+</details>
+<p><img src="/images/rust-py.png"alt="rusty-py"loading="lazy"decoding="async"width="960"height="960"></p>
+<h3 id="problem"tabindex="-1">Problem</h3>
+<p>A highly instructive problem in Software Performance Engineering: <a href="https://en.wikipedia.org/wiki/Matrix_multiplication">multiply</a> two square matrices of a given size.</p>
+<h3 id="naive-python-implementation"tabindex="-1">Naive Python Implementation</h3>
+<p>For now we’ll say <code>N = 1024</code>. Let’s start with a very naive Python implementation to get a sense of the problem:</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">from</span> time <span class="hljs-keyword">import</span> *
+
+N = <span class="hljs-number">1024</span>
+
+A = [[random.random() <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)] <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)]
+B = [[random.random() <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)] <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)]
+C = [[<span class="hljs-number">0</span>] * N] * N
+
+start = time()
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N):
+    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N):
+        <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N):
+            C[i][j] += A[i][k] * B[k][j]
+end = time()
+
+<span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Time taken: <span class="hljs-subst">{end - start}</span>&quot;</span>)
+</code></pre>
+<p>On my machine this took ~3 minutes. Likely not acceptable for most use cases.</p>
+<h3 id="naive-rust-implementation"tabindex="-1">Naive Rust Implementation</h3>
+<p>Now let’s try the exact same naive algorithm, but in Rust (using the dev/unoptimized build):</p>
+<pre class="hljs"><code><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() {
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">A</span> = <span class="hljs-title function_ invoke__">random_array</span>();
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">B</span> = <span class="hljs-title function_ invoke__">random_array</span>();
+	<span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">C</span> = [[<span class="hljs-number">0.0</span>; N]; N];
+	
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">start</span> = Instant::<span class="hljs-title function_ invoke__">now</span>();
+	<span class="hljs-keyword">for</span> <span class="hljs-variable">i</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+		<span class="hljs-keyword">for</span> <span class="hljs-variable">j</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+			<span class="hljs-keyword">for</span> <span class="hljs-variable">k</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+				C[i][j] += A[i][k] * B[k][j]
+			}
+		}
+	}
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">duration</span> = start.<span class="hljs-title function_ invoke__">elapsed</span>();
+	<span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Time taken: {:?}&quot;</span>, duration);
+}
+</code></pre>
+<p>This finished in 12 seconds on my machine - for a whopping 15x increase against the same Python implementation!</p>
+<h3 id="modifying-loop-order"tabindex="-1">Modifying Loop Order</h3>
+<p>Now for something maybe not so obvious. Let’s consider the following loop order change:</p>
+<pre class="hljs"><code><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() {
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">A</span> = <span class="hljs-title function_ invoke__">random_array</span>();
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">B</span> = <span class="hljs-title function_ invoke__">random_array</span>();
+	<span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">C</span> = [[<span class="hljs-number">0.0</span>; N]; N];
+	
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">start</span> = Instant::<span class="hljs-title function_ invoke__">now</span>();
+	<span class="hljs-keyword">for</span> <span class="hljs-variable">i</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+		<span class="hljs-keyword">for</span> <span class="hljs-variable">k</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+			<span class="hljs-keyword">for</span> <span class="hljs-variable">j</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+				C[i][j] += A[i][k] * B[k][j]
+			}
+		}
+	}
+	<span class="hljs-keyword">let</span> <span class="hljs-variable">duration</span> = start.<span class="hljs-title function_ invoke__">elapsed</span>();
+	<span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Time taken: {:?}&quot;</span>, duration);
+}
+</code></pre>
+<p>This code finishes in about 7 seconds for me. All I did was swap the loop order from i-j-k to i-k-j and we achieved a nearly 50% speedup! Let’s look at all of the possible loop orders and their running time:</p>
+<pre class="hljs"><code>| Loop Order  | Running Time |
+| ----------- | ------------ |
+| i-j-k       | 11.8s        |
+| i-k-j       | 7.6s         |
+| j-i-k       | 10.1s        |
+| j-k-i       | 21.8s        |
+| k-i-j       | 7.7s         |
+| k-j-i       | 21.4s        |
+</code></pre>
+<h4 id="why-the-speedup%3F"tabindex="-1">Why the speedup?</h4>
+<p>This difference in running time is caused by how well the loop order takes advantage of the CPU cache (specifically, it’s <a href="https://en.wikipedia.org/wiki/Locality_of_reference">spatial locality</a>). If we examine the number of cache misses between the best and worst loop order, we find that for the worst loop order we have ~18.5M LL cache misses:</p>
+<pre class="hljs"><code>valgrind --tool=cachegrind ./target/debug/matrix
+...
+LL misses:      18,489,921  (    18,094,045 rd   +        395,876 wr)
+...
+</code></pre>
+<p>but for the best loop order, we only have ~800k LL cache misses:</p>
+<pre class="hljs"><code>valgrind --tool=cachegrind ./target/debug/matrix
+...
+LL misses:      795,759  (       399,883 rd   +        395,876 wr)
+...
+</code></pre>
+<p>The loop order which better takes advantage of the matrix memory layout will perform better.</p>
+<h3 id="compiler-optimization"tabindex="-1">Compiler Optimization</h3>
+<p>Notice in the previous section that the binary lives in the <code>target/debug</code> directory. Which means I’ve been compiling the “dev” version this whole time. Let’s see how well the “release” version performs:</p>
+<pre class="hljs"><code>cargo r --release
+...
+Finished release [optimized] target(s) in 0.01s
+     Running `target/release/matrix`
+Time taken: 328.815344ms
+</code></pre>
+<p>That is <em>incredible</em> 🤯! It’s hard to understate how amazing that is. We went from a Python prototype running on the order of minutes, to a binary running on the order of milliseconds - mostly by just passing a single flag to the Rust compiler. This should always be the first trick to reach for. Let’s increase the matrix size to further push our machines.</p>
+<h3 id="1024--%3E-4096"tabindex="-1">1024 -&gt; 4096</h3>
+<p>As promised previously, lets increase the matrix size to 4096 and look at how our algorithm performs now:</p>
+<pre class="hljs"><code>cargo r --release
+   Compiling matrix v0.1.0 (/home/caden/matrix-optimizations/matrix)
+    Finished release [optimized] target(s) in 0.24s
+     Running `target/release/matrix`
+Time taken: 28.704995681s
+</code></pre>
+<p>Ouch - that’s much, much worse.</p>
+<h3 id="parallel-loops"tabindex="-1">Parallel Loops</h3>
+<p>Okay, what’s everyone’s first instinct when wanting to optimize something? Parallelize the work! Why only utilize a single core of the machine when we have multiple?
+Where could we apply parallelization? A very natural candidate would be the loops:</p>
+<pre class="hljs"><code><span class="hljs-keyword">for</span> <span class="hljs-variable">i</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+	<span class="hljs-keyword">for</span> <span class="hljs-variable">k</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+		<span class="hljs-keyword">for</span> <span class="hljs-variable">j</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+			C[i][j] += A[i][k] * B[k][j]
+		}
+	}
+}
+</code></pre>
+<h4 id="parallel-loops-in-rust%3F"tabindex="-1">Parallel loops in Rust?</h4>
+<p>Introducing <a href="https://docs.rs/rayon/latest/rayon/">rayon</a> - a highly regarded data-parallelism crate for converting sequential computations into parallel ones. Adding <code>rayon</code> to my <code>Cargo.toml</code>:</p>
+<pre class="hljs"><code>[dependencies]
+rayon = &quot;1.7.0&quot;
+</code></pre>
+<h4 id="which-loop%3F"tabindex="-1">Which loop?</h4>
+<p>A good rule of thumb for parallelizing loops is start with the outer loop first. We can easily keep the code structure the exact same and simply drop in a single <a href="https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefMutIterator.html#tymethod.par_iter_mut">par_iter_mut</a> on the outer loop:</p>
+<pre class="hljs"><code>C.<span class="hljs-title function_ invoke__">par_iter_mut</span>().<span class="hljs-title function_ invoke__">enumerate</span>().<span class="hljs-title function_ invoke__">for_each</span>(|(i, row)| {
+	<span class="hljs-keyword">for</span> <span class="hljs-variable">k</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+		<span class="hljs-keyword">for</span> <span class="hljs-variable">j</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+			row += A[i][k] * B[k][j]
+		}
+	}
+}
+</code></pre>
+<p>After running:</p>
+<pre class="hljs"><code>Time taken: 6.75999719s
+</code></pre>
+<p>we see a fantastic 4x speedup! Applying the same technique to the k-loop:</p>
+<pre class="hljs"><code>C.<span class="hljs-title function_ invoke__">par_iter_mut</span>().<span class="hljs-title function_ invoke__">enumerate</span>().<span class="hljs-title function_ invoke__">for_each</span>(|(i, row)| {
+	row.<span class="hljs-title function_ invoke__">par_iter_mut</span>().<span class="hljs-title function_ invoke__">enumerate</span>().<span class="hljs-title function_ invoke__">for_each</span>(|(k, val)|
+		<span class="hljs-keyword">for</span> <span class="hljs-variable">j</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..N {
+			*val += A[i][k] * B[k][j]
+		}
+	}
+}
+</code></pre>
+<p>we get a significant 33% speedup: <code>Time taken: 4.749579936s</code>!
+As as sanity check, I confirmed that all 16 of my cores were being utilized though monitoring the core usage with <code>htop</code>.</p>
+<h3 id="what%E2%80%99s-the-speed-limit%3F"tabindex="-1">What’s the speed limit?</h3>
+<p>Thus far, we’ve blindly tried optimization techniques with no sense of what an optimal solution really is. Time for a bit of math. Consider the following specs for my machine and let’s calculate it’s maximum possible number of FLOPS:</p>
+<pre class="hljs"><code>| Feature                  | Specification |
+| ------------------------ | ------------- |
+| Clock frequency          | 2.9GHz        |
+| Processors               | 2             |
+| Cores / Processor        | 8             |
+| Float instrs. / Cycle    | 16            |
+
+Max flops = (3.3 x 10^9) x 2 x 8 x 16 = 845 GFLOPS
+</code></pre>
+<p>Now that we know what the hard limit of our machine, how far away from the limit are we?</p>
+<pre class="hljs"><code>2n^3 = 2(2^12)^3 = 2^37 floating-point operations
+Running time = 4.75s
+=&gt; Flops = 2^37 / 4.75 = 29 GFLOPS
+=&gt; Utilization = Flops / Max flops = 29 / 845 = 3.4%
+</code></pre>
+<p>We’ve only achieved 3.4% of the maximum😕. That really makes you appreciate the engineering work behind hyper-optimized libraries such as <code>numpy</code>:</p>
+<pre class="hljs"><code><span class="hljs-keyword">import</span> random
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">from</span> time <span class="hljs-keyword">import</span> *
+
+N = <span class="hljs-number">4096</span>
+
+A = np.array([[random.random() <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)] <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)])
+B = np.array([[random.random() <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)] <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(N)])
+
+start = time()
+C = np.matmul(A, B)
+end = time()
+
+<span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Time taken: <span class="hljs-subst">{end - start}</span>&quot;</span>)
+</code></pre>
+<pre class="hljs"><code>Time taken: 0.5340592861175537
+</code></pre>
+<h3 id="what%E2%80%99s-next%3F"tabindex="-1">What’s next?</h3>
+<p>Well, we clearly have a lot to improve on. To name just a few directions we could travel down for further speedups:</p>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/cpp/parallel/amp/walkthrough-matrix-multiplication?view=msvc-170#multiplication-with-tiling">tiling</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Matrix_multiplication_algorithm#Divide-and-conquer_algorithm">parallel divide-and-conquer</a></li>
+<li>maximizing <a href="https://en.wikipedia.org/wiki/Automatic_vectorization">automatic vectorization</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions">AVX intrinsics</a></li>
+</ul>
+<p>Each of these adventures could be their own blog posts, so for the sake of brevity lets call it a day here, and feel happy about the speedups we were able to achieve.</p>
+<p><a href="https://github.com/CadenMG/matrix-optimizations">Full code on GitHub</a></p>
+
+      </section>
+      <section id="article-navigation">
+        
+          <div class="article-navigation-item article-navigation-next">
+            <a href="/article/5.html">
+              <div class="article-navigation-arrow article-navigation-next">＜</div>
+              <div class="article-navigation-content article-navigation-next">
+                <p class="article-navigation-title">Patching Node Dependencies</p>
+                <p class="article-navigation-subtitle"></p>
+              </div>
+            </a>
+          </div>
+        
+        
+          <div class="article-navigation-item article-navigation-prev">
+            <a href="/article/4.html">
+              <div class="article-navigation-arrow article-navigation-prev">＞</div>
+              <div class="article-navigation-content article-navigation-prev">
+                <p class="article-navigation-title">Building PaperPods</p>
+                <p class="article-navigation-subtitle">A tour of modern web app development</p>
+              </div>
+            </a>
+          </div>
+        
+      </section>
+      <section id="article-list-button-container">
+        <a href="/articles.html">
+          <div id="article-list-button">📚</div>
+        </a>
+      </section>
+    </article>
+  </main>
+
+
